@@ -1,6 +1,9 @@
 const userModel = require("../models/user.model");
 const sessionModel = require("../models/session.model");
 const tokenUtils = require("../utils/token.utils");
+const verificationModel = require("../models/verification.model");
+const crypto = require("crypto");
+const emailUtils = require("../utils/email.utils");
 
 async function handleUserRegister(req, res) {
   const { name, email, password } = req.body;
@@ -18,17 +21,33 @@ async function handleUserRegister(req, res) {
       });
     }
 
-    await userModel.create({
+    const user = await userModel.create({
       name,
       email,
       password,
     });
+
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    await verificationModel.create({
+      userId: user._id,
+      token: verificationToken,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+    });
+
+    const verificationLink = `${process.env.BASE_URL}/api/verify-email/${verificationToken}`;
+    await emailUtils.sendSignUpEmail(user.email, user.name, verificationLink);
+
     return res.status(201).json({
       success: true,
       message: "User successfully created",
+      verificationLink: verificationLink, // Include the verification link in the response for testing purposes
+      verificationToken: verificationToken, // Include the token in the response for testing purposes
     });
   } catch (error) {
-    return res.status(500).send("Internal server error");
+    return res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 }
 
@@ -58,8 +77,8 @@ async function handleUserLogin(req, res) {
 
     await sessionModel.create({
       userId: user._id,
-      refreshToken,
-      expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),// 3 days
+      tokenHash: refreshToken,
+      expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
       device: req.headers["user-agent"],
     });
     return res
@@ -80,7 +99,9 @@ async function handleUserLogin(req, res) {
         accessToken: accessToken,
       });
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 }
 
