@@ -11,7 +11,11 @@ app.get("/", (req, res) => {
 });
 
 const userRouter = require("./routes/user.routes");
+const emailVerifyRouter = require("./routes/emailverify.routes");
+const adminRouter = require("./routes/admin.routes");
 
 app.use("/api/users", userRouter);
+app.use("/api", emailVerifyRouter);
+app.use("/api/admin", adminRouter);
 
 module.exports = app;
