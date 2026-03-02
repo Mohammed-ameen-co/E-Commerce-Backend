@@ -65,6 +65,12 @@ async function handleUserLogin(req, res) {
         .status(401)
         .json({ message: "Please try again with correct credentials" });
     }
+
+    if (!user.isEmailVerified) {
+      return res
+        .status(403)
+        .json({ message: "Please verify your email before logging in" });
+    }
     const isPasswrodValid = await user.comparePassword(password, user.password);
 
     if (!isPasswrodValid) {
