@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 
 const sessionSchema = mongoose.Schema(
   {
@@ -36,7 +37,9 @@ sessionSchema.pre("save", async function () {
   if (!this.isModified("tokenHash")) {
     return;
   }
-  this.tokenHash = await bcrypt.hash(this.tokenHash, 12);
+  const salt = await bcrypt.genSalt(10);
+  this.tokenHash = await bcrypt.hash(this.tokenHash, salt);
+  return;
 });
 
 sessionSchema.methods.compareTokenHash = async function (token) {
