@@ -23,4 +23,15 @@ async function authMiddleware(req, res, next) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 }
-module.exports = authMiddleware;
+
+async function chackAdmin(req, res, next) {
+  console.log("User role:", req.user.role);
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ message: "Forbidden: Admins only" });
+  }
+  next();
+}
+module.exports = {
+  authMiddleware,
+  chackAdmin,
+};
