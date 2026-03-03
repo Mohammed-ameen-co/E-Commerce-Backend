@@ -6,7 +6,7 @@ function accesstoken(user) {
     role: user.role,
   };
   return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: "5m",
+    expiresIn: "15m",//testing purpuse
   });
 }
 
@@ -15,7 +15,7 @@ function refreshtoken(user) {
     _id: user._id,
   };
   return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
-    expiresIn: "3d",
+    expiresIn: "3d",//testing purpuse
   });
 }
 
