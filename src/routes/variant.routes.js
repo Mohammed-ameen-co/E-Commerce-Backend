@@ -1,23 +1,22 @@
 const { Router } = require("express");
-const category = require("../controllers/category.controller");
+const variants = require("../controllers/variant.controller");
 const middleware = require("../middleware/auth.middleware");
 
 const router = Router();
 
+
 router.post(
-  "/create-category",
+  "/create-variant",
   middleware.authMiddleware,
   middleware.chackAdmin,
-  category.createCategory,
+  variants.createVariantForProducts,
 );
 
 router.put(
-  "/update-category",
+  "/update-variant/:variantId/variant",
   middleware.authMiddleware,
   middleware.chackAdmin,
-  category.updateCategory,
+  variants.updateA_Variant,
 );
-
-router.get("/get-categorys", category.getAllCategory);
 
 module.exports = router;

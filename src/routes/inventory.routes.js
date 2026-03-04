@@ -10,11 +10,13 @@ router.post(
   middleware.chackAdmin,
   inventory.createInventoryProducts,
 );
-router.post(
-  "/add-product-new-variant/:productId",
+
+
+router.put(
+  "/update-product/:productId",
   middleware.authMiddleware,
   middleware.chackAdmin,
-  inventory.addNewVariant,
+  inventory.update_product,
 );
 
 router.get("/", inventory.getAllInventoryProduct);

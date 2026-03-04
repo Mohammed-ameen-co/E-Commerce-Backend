@@ -12,6 +12,7 @@ const inventorySchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "category",
       required: [true, "Category ID is required"],
+      index: true,
     },
     productName: {
       type: String,
@@ -33,73 +34,33 @@ const inventorySchema = new mongoose.Schema(
         "Product Description must be less than 1000 characters long",
       ],
     },
-    variant: [
-      {
-        productImage: {
-          type: String,
-          required: [true, "Product Image URL is required"],
-          trim: true,
-          match: [
-            /^http?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i,
-            "Please use a valid image URL (jpg, jpeg, png, gif, webp)",
-          ],
-        },
-        color: {
-          type: String,
-          trim: true,
-          minlength: [3, "Color must be at least 3 characters long"],
-          maxlength: [50, "Color must be less than 50 characters long"],
-          lowercase: true,
-          required: [true, "Color is required"],
-        },
-        size: {
-          type: String,
-          trim: true,
-          uppercase: true,
-          required: [true, "Size is required"],
-          enum: ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL", "6XL"],
-        },
-        stock: {
-          type: Number,
-          min: [0, "Stock must be a positive number"],
-          required: [true, "Stock quantity is required"],
-        },
-        price: {
-          type: Number,
-          required: [true, "Product Price is required"],
-          min: [0, "Product Price must be a positive number"],
-          index: true,
-        },
-      },
-    ],
+    status: {
+      type: String,
+      enum: ["ACTIVE", "INACTIVE"],
+      required: [true, "Product status is required"],
+      default: "ACTIVE",
+      index: true,
+      uppercase: true,
+    },
   },
   { timestamps: true },
 );
 
-inventorySchema.index({
-  productName: "text",
-  description: "text",
-});
-inventorySchema.index({
-  "variant.color": 1,
-  "variant.size": 1,
-});
-inventorySchema.index({
-  categoryId: 1,
-  "variant.price": 1,
-});
+inventorySchema.index(
+  {
+    productName: "text",
+    description: "text",
+  },
+  { weight: { productName: 10, description: 7 } },
+);
 
-inventorySchema.pre("save", function () {
-  if (!this.variant || this.variant.length === 0) return;
-
-  const combinations = this.variant.map((v) => `${v.color}_${v.size}`);
-
-  const unique = new Set(combinations);
-
-  if (unique.size !== combinations.length) {
-    throw new Error("Duplicate variant combination not allowed");
-  }
-});
+inventorySchema.index(
+  {
+    categoryId: 1,
+    productName: 1,
+  },
+  { unique: true },
+);
 
 const inventoryModel = mongoose.model("inventory", inventorySchema);
 
