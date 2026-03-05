@@ -3,10 +3,10 @@ const userModel = require("../models/user.model");
 
 async function optionalAuthMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
-  if (!authHeader) next();
+  if (!authHeader) return next();
 
   const token = authHeader.split(" ")[1];
-  if (!token) next();
+  if (!token) return next();
 
   try {
     const decode = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
@@ -16,12 +16,12 @@ async function optionalAuthMiddleware(req, res, next) {
     if (user) {
       req.user = user;
 
-      next();
+      return next();
     }
 
     next();
   } catch (error) {
-    next();
+    return next();
   }
 }
 

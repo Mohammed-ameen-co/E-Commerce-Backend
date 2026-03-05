@@ -12,7 +12,7 @@ router.post(
 );
 
 router.put(
-  "/update-category",
+  "/update-category/:categoryId",
   middleware.authMiddleware,
   middleware.chackAdmin,
   category.updateCategory,

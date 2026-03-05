@@ -11,7 +11,6 @@ router.post(
   inventory.createInventoryProducts,
 );
 
-
 router.put(
   "/update-product/:productId",
   middleware.authMiddleware,
@@ -20,4 +19,5 @@ router.put(
 );
 
 router.get("/", inventory.getAllInventoryProduct);
+
 module.exports = router;

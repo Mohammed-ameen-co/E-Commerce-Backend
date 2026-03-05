@@ -8,6 +8,12 @@ const variantSchema = new mongoose.Schema(
       required: [true, "Product ID must be required"],
       index: true,
     },
+    adminId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "user",
+      required: [true, "Admin ID is required"],
+      index: true,
+    },
     productImage: {
       type: String,
       required: [true, "Product Image URL is required"],

@@ -43,6 +43,8 @@ async function createVariantForProducts(req, res) {
     }
 
     const variant = await variantModel.create({
+      productId: productId,
+      adminId: req.user._id,
       productImage: productImage,
       color: color,
       size: size,
@@ -58,7 +60,7 @@ async function createVariantForProducts(req, res) {
   } catch (error) {
     return res
       .status(500)
-      .json({ message: "Error creating product", error: error.message });
+      .json({ message: "Error creating variant", error: error.message });
   }
 }
 

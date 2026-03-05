@@ -49,8 +49,8 @@ async function updateCategory(req, res) {
       });
     }
     const category = await categoryModel.findByIdAndUpdate(
-      { _id: categoryId, adminId: req.user._id },
-      { $ste: { categoryName } },
+      categoryId,
+      { $set: { categoryName } },
       { new: true, runValidators: true },
     );
 
