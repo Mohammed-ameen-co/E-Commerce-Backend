@@ -15,11 +15,13 @@ const emailVerifyRouter = require("./routes/emailverify.routes");
 const adminRouter = require("./routes/admin.routes");
 const categoryRouter = require("./routes/category.routes")
 const invantoryRouter = require("./routes/inventory.routes")
+const cartRouter = require("./routes/cart.routes")
 
 app.use("/api/users", userRouter);
 app.use("/api/e-commerce", emailVerifyRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/e-commerce",categoryRouter);
 app.use("/api/e-commerce",invantoryRouter);
+app.use("/api/e-commerce",cartRouter)
 
 module.exports = app;
