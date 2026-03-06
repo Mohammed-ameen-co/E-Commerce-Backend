@@ -1,10 +1,15 @@
 const cookieParser = require("cookie-parser");
 const express = require("express");
 
+// const preUserSessionMiddleware = require("./middleware/eSession.middleware")
+
 const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
+
+//pending...
+// app.use(preUserSessionMiddleware);
 
 app.get("/", (req, res) => {
   res.send("Welcome to E-Commerce API");

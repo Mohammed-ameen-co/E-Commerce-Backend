@@ -1,33 +1,28 @@
 const { Router } = require("express");
 const router = Router();
 const cart = require("../controllers/cart.controller");
-const preSession = require("../middleware/eSession.middleware");
-const optionalAuth = require("../middleware/optional.middleware");
+const auth = require("../middleware/auth.middleware")
 
 router.post(
   "/add-cart",
-  optionalAuth.optionalAuthMiddleware,
-  preSession.preUserSessionMiddleware,
+  auth.authMiddleware,
   cart.createCart,
 );
 
 router.delete(
   "/remove-item/:variantId",
-  optionalAuth.optionalAuthMiddleware,
-  preSession.preUserSessionMiddleware,
+  auth.authMiddleware,
   cart.removeItem,
 );
 router.delete(
   "/remove-one-item/:variantId",
-  optionalAuth.optionalAuthMiddleware,
-  preSession.preUserSessionMiddleware,
+  auth.authMiddleware,
   cart.removeOneItem,
 );
 
 router.get(
   "/get-cart",
-  optionalAuth.optionalAuthMiddleware,
-  preSession.preUserSessionMiddleware,
+  auth.authMiddleware,
   cart.getAllCart,
 );
 

@@ -1,5 +1,5 @@
 const cartModel = require("../models/cart.model");
-const e_SessionModel = require("../models/eSession.model");
+const variantModel = require("../models/variant.model");
 
 async function createCart(req, res) {
   try {
@@ -24,41 +24,51 @@ async function createCart(req, res) {
         message: "Quantity must be greater then 0",
       });
     }
-    const sessionId = req.sessionId;
+    const variant = await variantModel.findById(variantId);
 
-    const preUserSession = await e_SessionModel.findOne({ sessionId });
-
-    if (!preUserSession) {
+    if (!variant) {
       return res.status(404).json({
-        message: "Session not found",
+        message: "variant not found",
       });
     }
 
-    let cart = await cartModel.findOne({
-      $or: [{ sessionId }, { userId: preUserSession.userId }],
-    });
+    const productId = variant.productId;
+
+    if (variant.stock < parsedQuantity) {
+      return res.status(400).json({
+        message: "Insufficient stock",
+      });
+    }
+
+    const userId = req.user._id;
+
+    let cart = await cartModel.findOne({ userId });
 
     if (cart) {
       const item = cart.item.find((i) => i.variantId.equals(variantId));
 
       if (item) {
+        if (item.quantity + parsedQuantity > variant.stock) {
+          return res.status(400).json({
+            message: "stock is limited",
+          });
+        }
         item.quantity += parsedQuantity;
       } else {
-        cart.item.push({ variantId, quantity: parsedQuantity });
+        cart.item.push({ productId, variantId, quantity: parsedQuantity });
       }
       await cart.save();
     } else {
       cart = await cartModel.create({
-        sessionId,
-        item: [{ variantId: variantId, quantity: parsedQuantity }],
+        userId,
+        item: [
+          {
+            productId: productId,
+            variantId: variantId,
+            quantity: parsedQuantity,
+          },
+        ],
       });
-    }
-
-    const userId = preUserSession.userId;
-
-    if (userId && !cart.userId) {
-      cart.userId = userId;
-      await cart.save();
     }
 
     return res.status(200).json({
@@ -81,10 +91,10 @@ async function removeItem(req, res) {
         message: "Veriant ID not found",
       });
     }
-    const sessionId = req.sessionId;
+    const userId = req.user._id;
 
     const cart = await cartModel.updateOne(
-      { sessionId },
+      { userId },
       {
         $pull: { item: { variantId } },
       },
@@ -111,9 +121,9 @@ async function removeOneItem(req, res) {
         message: "Variant ID missing",
       });
     }
-    const sessionId = req.sessionId;
+    const userId = req.user._id;
 
-    let cart = await cartModel.findOne({ sessionId });
+    let cart = await cartModel.findOne({ userId });
 
     if (!cart) {
       return res.status(404).json({
@@ -126,7 +136,7 @@ async function removeOneItem(req, res) {
       if (item && item.quantity > 1) {
         await cartModel.updateOne(
           {
-            sessionId,
+            userId,
             "item.variantId": variantId,
           },
           {
@@ -137,7 +147,7 @@ async function removeOneItem(req, res) {
         );
       } else {
         await cartModel.updateOne(
-          { sessionId },
+          { userId },
           {
             $pull: { item: { variantId } },
           },
@@ -158,24 +168,13 @@ async function removeOneItem(req, res) {
 
 async function getAllCart(req, res) {
   try {
-    const sessionId = req.sessionId;
-    const preUserSession = await e_SessionModel.findOne({ sessionId });
-    if (!preUserSession) {
-      return res.status(404).json({
-        message: "Session not found",
-      });
-    }
-    const userId = preUserSession.userId;
-    let cart;
-    if (userId) {
-      cart = await cartModel.findOne({ userId });
-    } else {
-      cart = await cartModel.findOne({ userId });
-    }
+    const userId = req.user._id;
+    let cart = await cartModel.findOne({ userId });
+
     return res.status(200).json({
-        message: "Cart data successfully get",
-        cart,
-    })
+      message: "Cart data successfully get",
+      cart,
+    });
   } catch (error) {
     return res.status(500).json({
       message: "Internal server error at removeOneItem function",
@@ -190,6 +189,5 @@ module.exports = {
   removeOneItem,
   getAllCart,
 };
-
 
 //All cart pending....
