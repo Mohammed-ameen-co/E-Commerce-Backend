@@ -14,13 +14,12 @@ const categorySchema = new mongoose.Schema(
       trim: true,
       minlength: [3, "Category Name must be at least 3 characters long"],
       maxlength: [50, "Category Name must be less than 50 characters long"],
+      index: true,
       unique: [true, "Category Name must be unique"],
     },
   },
   { timestamps: true },
 );
-
-categorySchema.index({ categoryName: 1 });
 
 const categoryModel = mongoose.model("category", categorySchema);
 

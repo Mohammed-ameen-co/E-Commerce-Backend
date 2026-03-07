@@ -6,6 +6,7 @@ const cartSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",
       index: true,
+      unquie: true,
     },
     item: [
       {
@@ -29,7 +30,6 @@ const cartSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
-cartSchema.index({ userId: 1 }, { unique: true, sparse: true });
 
 const cartModel = mongoose.model("cart", cartSchema);
 module.exports = cartModel;
