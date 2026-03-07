@@ -24,8 +24,16 @@ async function authMiddleware(req, res, next) {
   }
 }
 
+async function chackIsEmailVerified(req, res, next) {
+  if (!req.user.isEmailVerified) {
+    return res.status(403).json({
+      message: "please varified your email",
+    });
+  }
+  next();
+}
+
 async function chackAdmin(req, res, next) {
-  console.log("User role:", req.user.role);
   if (req.user.role !== "admin") {
     return res.status(403).json({ message: "Forbidden: Admins only" });
   }
@@ -33,5 +41,6 @@ async function chackAdmin(req, res, next) {
 }
 module.exports = {
   authMiddleware,
+  chackIsEmailVerified,
   chackAdmin,
 };
