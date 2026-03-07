@@ -5,25 +5,6 @@ async function createCart(req, res) {
   try {
     const { variantId, quantity } = req.body;
 
-    if (!variantId || quantity === undefined) {
-      return res.status(400).json({
-        message: "Variant Id and quantity is required",
-      });
-    }
-
-    const parsedQuantity = Number(quantity);
-
-    if (isNaN(parsedQuantity)) {
-      return res.status(400).json({
-        message: "Quantity must be a valid number",
-      });
-    }
-
-    if (parsedQuantity <= 0) {
-      return res.status(400).json({
-        message: "Quantity must be greater then 0",
-      });
-    }
     const variant = await variantModel.findById(variantId);
 
     if (!variant) {
@@ -34,7 +15,7 @@ async function createCart(req, res) {
 
     const productId = variant.productId;
 
-    if (variant.stock < parsedQuantity) {
+    if (variant.stock < quantity) {
       return res.status(400).json({
         message: "Insufficient stock",
       });
@@ -48,14 +29,14 @@ async function createCart(req, res) {
       const item = cart.item.find((i) => i.variantId.equals(variantId));
 
       if (item) {
-        if (item.quantity + parsedQuantity > variant.stock) {
+        if (item.quantity + quantity > variant.stock) {
           return res.status(400).json({
             message: "stock is limited",
           });
         }
-        item.quantity += parsedQuantity;
+        item.quantity += quantity;
       } else {
-        cart.item.push({ productId, variantId, quantity: parsedQuantity });
+        cart.item.push({ productId, variantId, quantity });
       }
       await cart.save();
     } else {
@@ -65,13 +46,13 @@ async function createCart(req, res) {
           {
             productId: productId,
             variantId: variantId,
-            quantity: parsedQuantity,
+            quantity: quantity,
           },
         ],
       });
     }
 
-    return res.status(200).json({
+    return res.status(201).json({
       message: "Cart successfully created",
       cart,
     });
@@ -177,7 +158,7 @@ async function getAllCart(req, res) {
     });
   } catch (error) {
     return res.status(500).json({
-      message: "Internal server error at removeOneItem function",
+      message: "Internal server error at getAllCart function",
       error: error.message,
     });
   }
