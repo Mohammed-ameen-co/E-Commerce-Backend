@@ -13,6 +13,12 @@ async function createCart(req, res) {
       });
     }
 
+    if (quantity <= 0) {
+      return res.status(400).json({
+        message: "Invalid quantity",
+      });
+    }
+    
     const productId = variant.productId;
 
     if (variant.stock < quantity) {
@@ -35,8 +41,14 @@ async function createCart(req, res) {
           });
         }
         item.quantity += quantity;
+        item.price = variant.price;
       } else {
-        cart.item.push({ productId, variantId, quantity });
+        cart.item.push({
+          productId,
+          variantId,
+          quantity,
+          price: variant.price,
+        });
       }
       await cart.save();
     } else {
@@ -47,6 +59,7 @@ async function createCart(req, res) {
             productId: productId,
             variantId: variantId,
             quantity: quantity,
+            price: variant.price,
           },
         ],
       });

@@ -39,7 +39,6 @@ const addressSchema = new mongoose.Schema(
     },
     landmark: {
       type: String,
-      required: [true, "Name any important place near your address."],
       trim: true,
     },
     area: {
