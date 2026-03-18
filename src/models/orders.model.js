@@ -70,6 +70,14 @@ const ordersSchema = new mongoose.Schema(
       enum: ["COD", "online"],
       required: true,
     },
+    cancelReason: {
+      type: String,
+      default: null,
+    },
+    cancelledAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 );
