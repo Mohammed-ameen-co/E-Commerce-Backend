@@ -12,7 +12,11 @@ const verificationSchema = new mongoose.Schema(
     token: {
       type: String,
       required: [true, "Token is required"],
-      
+    },
+    type: {
+      type: String,
+      enum: ["EMAIL_VERIFY", "RESET_PASSWORD"],
+      required: true,
     },
     expiresAt: {
       type: Date,
@@ -28,14 +32,14 @@ verificationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 verificationSchema.pre("save", async function () {
   if (!this.isModified("token")) {
-    return ;
+    return;
   }
   this.token = crypto.createHash("sha256").update(this.token).digest("hex");
-  return ;
+  return;
 });
 verificationSchema.methods.compareToken = async function (token) {
- const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
- return this.token === hashedToken;
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+  return this.token === hashedToken;
 };
 const verificationModel = mongoose.model("verification", verificationSchema);
 
