@@ -187,9 +187,78 @@ async function updateOrderStatus(req, res) {
   }
 }
 
-//3 pending...
+//3 order cancellation...
+
+async function orderCancellation(req, res) {
+  let session;
+  try {
+    const { orderId, cancelReason } = req.body;
+    const userId = req.user._id;
+
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({
+        message: "Invalid order id",
+      });
+    }
+    const order = await orderModel.findOne({ _id: orderId, userId });
+
+    if (!order) {
+      return res.status(404).json({
+        message: "order not found",
+      });
+    }
+
+    if (order.status === "Cancelled") {
+      return res.status(400).json({
+        message: "order already cancelled",
+      });
+    }
+    if (order.status === "Shipped" || order.status === "Delivered") {
+      return res.status(400).json({
+        message: "order cannot be cancelled after shipping",
+      });
+    }
+
+    session = await mongoose.startSession();
+
+    session.startTransaction();
+
+    order.status = "Cancelled";
+    order.cancelReason = cancelReason || "User cancelled";
+    order.cancelledAt = new Date();
+
+    await order.save({ session });
+
+    const operations = cart.item.map((item) => ({
+      updateOne: {
+        filter: { _id: item.variantId },
+        update: { $inc: { stock: item.quantity } },
+      },
+    }));
+
+    await variantModel.bulkWrite(operations, { session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(200).json({
+      message: "order canclled",
+      order,
+    });
+  } catch (error) {
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
+    return res.status(500).json({
+      message: "Internal server error at orderCancellation function",
+      error: error.message,
+    });
+  }
+}
 
 module.exports = {
   createOrders,
   updateOrderStatus,
+  orderCancellation,
 };
