@@ -35,7 +35,7 @@ async function handleUserRegister(req, res) {
       expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
     });
 
-    const verificationLink = `${process.env.BASE_URL}/api/verify-email/${verificationToken}`;//If you are using the frontend, replace BASE_URL with CLIENT_URL.
+    const verificationLink = `${process.env.BASE_URL}/api/verify-email/${verificationToken}`; //If you are using the frontend, replace BASE_URL with CLIENT_URL.
     await emailUtils.sendSignUpEmail(user.email, user.name, verificationLink);
 
     return res.status(201).json({
@@ -244,7 +244,6 @@ async function changePassword(req, res) {
   }
 }
 
-
 //this is send forgot password link
 async function forgotPassword(req, res) {
   try {
@@ -276,7 +275,7 @@ async function forgotPassword(req, res) {
       expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
     });
 
-    const resetLink = `${process.env.BASE_URL}/api/reset-password/${user._id}/${verificationToken}`;//If you are using the frontend, replace BASE_URL with CLIENT_URL.
+    const resetLink = `${process.env.BASE_URL}/api/reset-password/${user._id}/${verificationToken}`; //If you are using the frontend, replace BASE_URL with CLIENT_URL.
     await emailUtils.sendForgotPasswordEmail(user.email, user.name, resetLink);
 
     return res.status(200).json({

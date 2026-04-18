@@ -79,9 +79,9 @@ async function createOrders(req, res) {
           message: "insufficient stock",
         });
       }
-      totalPrice += i.price * i.quantity;
+      totalPrice += variant.price * i.quantity;
     }
-    const shippingCharge = totalPrice > 500 ? 0 : 60;
+    const shippingCharge = totalPrice > 500 ? 0 : 60; // ise dynamic karna hoga
 
     session = await mongoose.startSession();
 
@@ -137,7 +137,7 @@ async function createOrders(req, res) {
   }
 }
 
-//2 complete
+//2 complete ?
 async function updateOrderStatus(req, res) {
   try {
     const { orderId } = req.params;
@@ -154,27 +154,38 @@ async function updateOrderStatus(req, res) {
       });
     }
 
-    const allowedStatus = [
-      "Pending",
-      "Processing",
-      "Shipped",
-      "Delivered",
-      "Cancelled",
-    ];
-    if (!allowedStatus.includes(status)) {
-      return res.status(400).json({ message: "invalid status" });
-    }
-    const order = await orderModel.findByIdAndUpdate(
-      orderId,
-      { $set: { status, paymentStatus } },
-      { new: true, runValidators: true },
-    );
+    const order = await orderModel.findById(orderId);
 
     if (!order) {
       return res.status(404).json({
         message: "order data not found",
       });
     }
+
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        message: "Not allowed to update order status",
+      });
+    }
+    const statusFlow = {
+      Pending: ["Processing", "Cancelled"],
+      Processing: ["Shipped", "Cancelled"],
+      Shipped: ["Delivered", "Cancelled"],
+      Delivered: [],
+      Cancelled: [],
+    };
+    if (!statusFlow[order.status].includes(status)) {
+      return res.status(400).json({ message: "invalid status" });
+    }
+
+    order.status = status;
+
+    if (order.orderType === "COD" && status === "Delivered") {
+      order.paymentStatus = "Paid";
+    }
+
+    await order.save();
+
     return res.status(200).json({
       message: "order data successfully update",
       order,
