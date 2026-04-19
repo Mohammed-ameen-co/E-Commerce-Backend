@@ -5,20 +5,20 @@ const orderController = require("../controllers/order.controller");
 const auth = require("../middleware/auth.middleware");
 
 router.post(
-  "/create-order",
+  "/create/order",
   auth.authMiddleware,
   auth.chackIsEmailVerified,
   orderController.createOrders,
 );
 router.put(
-  "/update-order",
+  "/update/:orderId/status",
   auth.authMiddleware,
   auth.chackAdmin,
   orderController.updateOrderStatus,
 );
-
-router.post(
-  "/cancelled-order",
+  
+router.put(
+  "/orders/:orderId/cancel",
   auth.authMiddleware,
   auth.chackIsEmailVerified,
   orderController.orderCancellation,

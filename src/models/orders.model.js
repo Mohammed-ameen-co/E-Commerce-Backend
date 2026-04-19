@@ -61,11 +61,11 @@ const ordersSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ["Pending", "Paid", "Failed"],
+      enum: ["Pending", "Paid", "Failed","Refunded"],
       default: "Pending",
       required: true,
     },
-    orderType: {
+    orderMethod: {
       type: String,
       enum: ["COD", "online"],
       required: true,
@@ -73,6 +73,7 @@ const ordersSchema = new mongoose.Schema(
     cancelReason: {
       type: String,
       default: null,
+      minlength:[15, "Cancel reason must be at least 15 characters long"],
     },
     cancelledAt: {
       type: Date,

@@ -20,13 +20,13 @@ const mongoose = require("mongoose");
 async function createOrders(req, res) {
   let session;
   try {
-    const { addressId, orderType } = req.body;
+    const { addressId, orderMethod } = req.body;
     if (!mongoose.Types.ObjectId.isValid(addressId)) {
       return res.status(400).json({
         message: "Invalid address ID",
       });
     }
-    if (!orderType) {
+    if (!orderMethod) {
       return res.status(400).json({
         message: "Bad request: Order type required",
       });
@@ -86,6 +86,11 @@ async function createOrders(req, res) {
     session = await mongoose.startSession();
 
     session.startTransaction();
+    
+    if (orderMethod === "online") {
+      /* online payment process is pending for now, as payment gateway integration is not done yet.
+       after successful payment totalPrice, shippingCharge and orderMethod will be updated in order document.*/
+    }
 
     const order = await orderModel.create(
       [
@@ -101,7 +106,7 @@ async function createOrders(req, res) {
           })),
           totalPrice,
           shippingCharge,
-          orderType,
+          orderMethod,
         },
       ],
       { session },
@@ -162,7 +167,8 @@ async function updateOrderStatus(req, res) {
       });
     }
 
-    if (req.user.role !== "admin") {
+    const isAdmin = req.user.role === "admin";
+    if (!isAdmin) {
       return res.status(403).json({
         message: "Not allowed to update order status",
       });
@@ -170,7 +176,7 @@ async function updateOrderStatus(req, res) {
     const statusFlow = {
       Pending: ["Processing", "Cancelled"],
       Processing: ["Shipped", "Cancelled"],
-      Shipped: ["Delivered", "Cancelled"],
+      Shipped: ["Delivered"],
       Delivered: [],
       Cancelled: [],
     };
@@ -180,7 +186,7 @@ async function updateOrderStatus(req, res) {
 
     order.status = status;
 
-    if (order.orderType === "COD" && status === "Delivered") {
+    if (order.orderMethod === "COD" && status === "Delivered") {
       order.paymentStatus = "Paid";
     }
 
@@ -203,7 +209,8 @@ async function updateOrderStatus(req, res) {
 async function orderCancellation(req, res) {
   let session;
   try {
-    const { orderId, cancelReason } = req.body;
+    const { orderId } = req.params;
+    const { cancelReason } = req.body;
     const userId = req.user._id;
 
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
@@ -211,7 +218,13 @@ async function orderCancellation(req, res) {
         message: "Invalid order id",
       });
     }
-    const order = await orderModel.findOne({ _id: orderId, userId });
+    const isAdmin = req.user.role === "admin";
+    let order;
+    if (isAdmin && cancelReason) {
+      order = await orderModel.findOne({ _id: orderId });
+    } else {
+      order = await orderModel.findOne({ _id: orderId, userId });
+    }
 
     if (!order) {
       return res.status(404).json({
@@ -224,23 +237,35 @@ async function orderCancellation(req, res) {
         message: "order already cancelled",
       });
     }
-    if (order.status === "Shipped" || order.status === "Delivered") {
+
+    const isFixedStatus = ["Shipped", "Delivered"].includes(order.status);
+
+    if ( isFixedStatus ) {
       return res.status(400).json({
-        message: "order cannot be cancelled after shipping",
+        message: "order cannot be cancelled after shipped or delivered",
       });
     }
+
+    const payMetRefundable =
+      order.orderMethod === "online" && order.paymentStatus === "Paid";
 
     session = await mongoose.startSession();
 
     session.startTransaction();
 
     order.status = "Cancelled";
-    order.cancelReason = cancelReason || "User cancelled";
+    order.cancelReason = cancelReason || "not specified";
     order.cancelledAt = new Date();
+
+    if (payMetRefundable) {
+      /* refund process and update payment status to refunded is pending for now,
+       as payment gateway integration is not done yet.*/
+      order.paymentStatus = "Refunded";
+    }
 
     await order.save({ session });
 
-    const operations = cart.item.map((item) => ({
+    const operations = order.items.map((item) => ({
       updateOne: {
         filter: { _id: item.variantId },
         update: { $inc: { stock: item.quantity } },
