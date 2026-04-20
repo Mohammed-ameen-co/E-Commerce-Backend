@@ -24,6 +24,7 @@ const variantRouter = require("./routes/variant.routes");
 const cartRouter = require("./routes/cart.routes");
 const addressRouter = require("./routes/address.routes");
 const ordersRouter = require("./routes/order.routes");
+const reviewRouter = require("./routes/review.routes");
 
 app.use("/api/e-users", userRouter);
 app.use("/api/e-commerce", emailVerifyRouter);
@@ -34,5 +35,6 @@ app.use("/api/e-variant", variantRouter);
 app.use("/api/e-cart", cartRouter);
 app.use("/api/e-address", addressRouter);
 app.use("/api/e-order", ordersRouter);
+app.use("/api/e-review", reviewRouter);
 
 module.exports = app;
