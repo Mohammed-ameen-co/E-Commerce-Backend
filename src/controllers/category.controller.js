@@ -3,14 +3,23 @@ const mongoose = require("mongoose");
 
 //Create new category
 async function createCategory(req, res) {
-  const { categoryName } = req.body;
+  const { categoryName, parentCategoryId } = req.body;
   try {
     if (!categoryName) {
       return res.status(400).json({ message: "Category name is required" });
     }
+
+    let parent = null;
+    if (parentCategoryId) {
+      parent = await categoryModel.findById(parentCategoryId);
+      if (!parent) {
+        return res.status(400).json({ message: "Parent category not found" });
+      }
+    }
     const normalizedName = categoryName.trim().toLowerCase();
     const isCategoryExists = await categoryModel.findOne({
       categoryName: normalizedName,
+      parentCategoryId: parentCategoryId || null,
       adminId: req.user._id,
     });
     if (isCategoryExists) {
@@ -18,7 +27,8 @@ async function createCategory(req, res) {
     }
     const category = await categoryModel.create({
       adminId: req.user._id,
-      categoryName,
+      parentCategoryId: parentCategoryId || null,
+      categoryName: normalizedName,
     });
     return res.status(201).json({
       success: true,
@@ -48,17 +58,32 @@ async function updateCategory(req, res) {
         message: "Invalid category id",
       });
     }
-    const category = await categoryModel.findByIdAndUpdate(
-      categoryId,
-      { $set: { categoryName } },
-      { new: true, runValidators: true },
-    );
+    const normalizedName = categoryName.trim().toLowerCase();
+    const category = await categoryModel.findOne({
+      _id: categoryId,
+      adminId: req.user._id,
+    });
 
     if (!category) {
       return res.status(404).json({
         message: "Category data not found",
       });
     }
+
+    const isCategoryExists = await categoryModel.findOne({
+      _id: { $ne: categoryId },
+      categoryName: normalizedName,
+      parentCategoryId: category.parentCategoryId,
+      adminId: req.user._id,
+    });
+    if (isCategoryExists) {
+      return res.status(409).json({
+        message: "Category name already exists",
+      });
+    }
+
+    category.categoryName = normalizedName;
+    await category.save();
 
     return res.status(200).json({
       message: "Category name updated",
