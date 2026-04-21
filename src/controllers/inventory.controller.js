@@ -110,7 +110,10 @@ async function update_product(req, res) {
 //And this is get the all invetory schema products
 async function getAllInventoryProduct(req, res) {
   try {
-    const allProduct = await inventoryModel.find({});
+    const allProduct = await inventoryModel.find(
+      {},
+      {adminId: 0, createdAt: 0, updatedAt: 0, __v: 0},
+    );
 
     return res.status(200).json({
       success: true,
