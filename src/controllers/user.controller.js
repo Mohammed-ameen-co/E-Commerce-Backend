@@ -27,22 +27,22 @@ async function handleUserRegister(req, res) {
       password,
     });
 
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-    await verificationModel.create({
-      userId: user._id,
-      token: verificationToken,
-      type: "EMAIL_VERIFY",
-      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
-    });
+    // const verificationToken = crypto.randomBytes(32).toString("hex");
+    // await verificationModel.create({
+    //   userId: user._id,
+    //   token: verificationToken,
+    //   type: "EMAIL_VERIFY",
+    //   expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+    // });
 
-    const verificationLink = `${process.env.BASE_URL}/api/verify-email/${verificationToken}`; //If you are using the frontend, replace BASE_URL with CLIENT_URL.
-    await emailUtils.sendSignUpEmail(user.email, user.name, verificationLink);
+    // const verificationLink = `${process.env.BASE_URL}/api/verify-email/${verificationToken}`; //If you are using the frontend, replace BASE_URL with CLIENT_URL.
+    // await emailUtils.sendSignUpEmail(user.email, user.name, verificationLink);
 
     return res.status(201).json({
       success: true,
       message: "User successfully created",
-      verificationLink: verificationLink, // Include the verification link in the response for testing purposes
-      verificationToken: verificationToken, // Include the token in the response for testing purposes
+      // verificationLink: verificationLink, // Include the verification link in the response for testing purposes
+      // verificationToken: verificationToken, // Include the token in the response for testing purposes
     });
   } catch (error) {
     return res.status(500).json({
@@ -72,6 +72,7 @@ async function handleUserLogin(req, res) {
         .status(403)
         .json({ message: "Please verify your email before logging in" });
     }
+
     const isPasswrodValid = await user.comparePassword(password);
 
     if (!isPasswrodValid) {
