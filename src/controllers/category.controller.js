@@ -36,6 +36,7 @@ async function createCategory(req, res) {
       category,
     });
   } catch (error) {
+    console.error("Error creating category:", error);
     return res
       .status(500)
       .json({ message: "Error creating category", error: error.message });
@@ -105,11 +106,26 @@ async function updateCategory(req, res) {
 //This controller get All category
 async function getAllCategory(req, res) {
   try {
-    const getCategory = await categoryModel.find();
+    const categorys = await categoryModel.find({}, { adminId: 0, createdAt: 0, updatedAt: 0, __v: 0 });
+
+    const map = {};
+    const tree = [];
+
+    categorys.forEach((c) => {
+      map[c._id] = { ...c, children: [] };
+    });
+
+    categorys.forEach((c) => {
+      if (c.parentCategoryId) {
+        map[c.parentCategoryId]?.children.push(map[c._id]);
+      } else {
+        tree.push([map[c._id]]);
+      }
+    });
 
     return res.status(200).json({
       success: true,
-      categorys: getCategory,
+      categorys: tree,
     });
   } catch (error) {
     return res.status(500).json({
