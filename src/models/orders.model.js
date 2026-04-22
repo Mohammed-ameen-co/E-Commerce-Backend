@@ -42,16 +42,34 @@ const ordersSchema = new mongoose.Schema(
           type: Number,
           required: true,
         },
+        status: {
+          type: String,
+          enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
+          default: "Pending",
+          required: true,
+        },
+        refundStatus: {
+          type: String,
+          enum: ["None", "Refund Requested", "Refunded"],
+          default: "None",
+        },
+        cancelReason: {
+          type: String,
+          default: "",
+        },
+        cancelledAt: {
+          type: Date,
+          default: null,
+        },
+        refundStatus:{
+          type: String,
+          enum: ["None", "Refund Requested", "Refunded"],
+          default: "None",
+        }
       },
     ],
     totalPrice: {
       type: Number,
-      required: true,
-    },
-    status: {
-      type: String,
-      enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
-      default: "Pending",
       required: true,
     },
     shippingCharge: {
@@ -61,7 +79,7 @@ const ordersSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ["Pending", "Paid", "Failed","Refunded"],
+      enum: ["Pending", "Paid", "Failed", "Refunded"],
       default: "Pending",
       required: true,
     },
@@ -69,15 +87,6 @@ const ordersSchema = new mongoose.Schema(
       type: String,
       enum: ["COD", "online"],
       required: true,
-    },
-    cancelReason: {
-      type: String,
-      default: null,
-      minlength:[15, "Cancel reason must be at least 15 characters long"],
-    },
-    cancelledAt: {
-      type: Date,
-      default: null,
     },
   },
   { timestamps: true },

@@ -86,7 +86,7 @@ async function createOrders(req, res) {
     session = await mongoose.startSession();
 
     session.startTransaction();
-    
+
     if (orderMethod === "online") {
       /* online payment process is pending for now, as payment gateway integration is not done yet.
        after successful payment totalPrice, shippingCharge and orderMethod will be updated in order document.*/
@@ -145,17 +145,20 @@ async function createOrders(req, res) {
 //2 complete ?
 async function updateOrderStatus(req, res) {
   try {
-    const { orderId } = req.params;
-    const { status, paymentStatus } = req.body;
+    const { orderId, orderItemId } = req.params;
+    const { status } = req.body;
 
-    if (!status || !paymentStatus) {
+    if (!status) {
       return res.status(400).json({
-        message: "status and paymentStatus is required",
+        message: "status is required",
       });
     }
-    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+    if (
+      !mongoose.Types.ObjectId.isValid(orderId) ||
+      !mongoose.Types.ObjectId.isValid(orderItemId)
+    ) {
       return res.status(400).json({
-        message: "Invalid order id",
+        message: "Invalid order or order item id",
       });
     }
 
@@ -164,6 +167,14 @@ async function updateOrderStatus(req, res) {
     if (!order) {
       return res.status(404).json({
         message: "order data not found",
+      });
+    }
+
+    const item = order.items.id(orderItemId);
+
+    if (!item) {
+      return res.status(404).json({
+        message: "order item not found",
       });
     }
 
@@ -180,13 +191,13 @@ async function updateOrderStatus(req, res) {
       Delivered: [],
       Cancelled: [],
     };
-    if (!statusFlow[order.status].includes(status)) {
+    if (!statusFlow[item.status] || !statusFlow[item.status].includes(status)) {
       return res.status(400).json({ message: "invalid status" });
     }
 
-    order.status = status;
+    item.status = status;
 
-    if (order.orderMethod === "COD" && status === "Delivered") {
+    if (order.orderMethod === "COD" && item.status === "Delivered") {
       order.paymentStatus = "Paid";
     }
 
@@ -209,13 +220,16 @@ async function updateOrderStatus(req, res) {
 async function orderCancellation(req, res) {
   let session;
   try {
-    const { orderId } = req.params;
+    const { orderId, orderItemId } = req.params;
     const { cancelReason } = req.body;
     const userId = req.user._id;
 
-    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+    if (
+      !mongoose.Types.ObjectId.isValid(orderId) ||
+      !mongoose.Types.ObjectId.isValid(orderItemId)
+    ) {
       return res.status(400).json({
-        message: "Invalid order id",
+        message: "Invalid order or order item id",
       });
     }
     const isAdmin = req.user.role === "admin";
@@ -232,15 +246,23 @@ async function orderCancellation(req, res) {
       });
     }
 
-    if (order.status === "Cancelled") {
+    const item = order.items.id(orderItemId);
+
+    if (!item) {
+      return res.status(404).json({
+        message: "order item not found",
+      });
+    }
+
+    if (item.status === "Cancelled") {
       return res.status(400).json({
         message: "order already cancelled",
       });
     }
 
-    const isFixedStatus = ["Shipped", "Delivered"].includes(order.status);
+    const isFixedStatus = ["Shipped", "Delivered"].includes(item.status);
 
-    if ( isFixedStatus ) {
+    if (isFixedStatus) {
       return res.status(400).json({
         message: "order cannot be cancelled after shipped or delivered",
       });
@@ -253,9 +275,13 @@ async function orderCancellation(req, res) {
 
     session.startTransaction();
 
-    order.status = "Cancelled";
-    order.cancelReason = cancelReason || "not specified";
-    order.cancelledAt = new Date();
+    item.status = "Cancelled";
+    item.cancelReason = cancelReason || "not specified";
+    item.cancelledAt = new Date();
+
+    order.totalPrice = order.items
+      .filter((i) => i.status !== "Cancelled")
+      .reduce((acc, i) => acc + i.price * i.quantity, 0);
 
     if (payMetRefundable) {
       /* refund process and update payment status to refunded is pending for now,
@@ -265,14 +291,11 @@ async function orderCancellation(req, res) {
 
     await order.save({ session });
 
-    const operations = order.items.map((item) => ({
-      updateOne: {
-        filter: { _id: item.variantId },
-        update: { $inc: { stock: item.quantity } },
-      },
-    }));
-
-    await variantModel.bulkWrite(operations, { session });
+    await variantModel.updateOne(
+      { _id: item.variantId },
+      { $inc: { stock: item.quantity } },
+      { session },
+    );
 
     await session.commitTransaction();
     session.endSession();

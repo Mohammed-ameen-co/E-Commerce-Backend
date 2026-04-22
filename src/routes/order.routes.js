@@ -18,7 +18,7 @@ router.put(
 );
   
 router.put(
-  "/orders/:orderId/cancel",
+  "/orders/:orderId/items/:orderItemId/cancel",
   auth.authMiddleware,
   auth.chackIsEmailVerified,
   orderController.orderCancellation,
