@@ -4,9 +4,9 @@ const mongoose = require("mongoose");
 
 //This function create new products in inventory schema
 async function createInventoryProducts(req, res) {
-  const { categoryId, productName, description } = req.body;
+  const { categoryId, productName, description, productCoverImage } = req.body;
   try {
-    if (!categoryId || !productName || !description) {
+    if (!categoryId || !productName || !description || !productCoverImage) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -32,6 +32,7 @@ async function createInventoryProducts(req, res) {
       categoryId: category._id,
       productName,
       description,
+      productCoverImage,
     });
 
     return res.status(201).json({
@@ -112,12 +113,12 @@ async function getAllInventoryProduct(req, res) {
   try {
     const allProduct = await inventoryModel.find(
       {},
-      {adminId: 0, createdAt: 0, updatedAt: 0, __v: 0},
+      {adminId: 0, createdAt: 0, updatedAt: 0},
     );
 
     return res.status(200).json({
       success: true,
-      allProduct,
+      data: [allProduct],
     });
   } catch (error) {
     return res.status(500).json({

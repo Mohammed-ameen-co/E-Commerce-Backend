@@ -34,6 +34,15 @@ const inventorySchema = new mongoose.Schema(
         "Product Description must be less than 1000 characters long",
       ],
     },
+    productCoverImage: {
+      type: String,
+      trim: true,
+      required: [true, "Product Cover Image URL is required"],
+      match: [
+        /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i,
+        "Please use a valid image URL (jpg, jpeg, png, gif, webp)",
+      ],
+    },
     status: {
       type: String,
       enum: ["ACTIVE", "INACTIVE"],
