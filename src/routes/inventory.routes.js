@@ -18,6 +18,6 @@ router.put(
   inventory.update_product,
 );
 
-router.get("/", inventory.getAllInventoryProduct);
+router.get("/products", inventory.getAllInventoryProduct);
 
 module.exports = router;

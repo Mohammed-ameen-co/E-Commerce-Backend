@@ -18,6 +18,6 @@ router.put(
   category.updateCategory,
 );
 
-router.get("/get-categorys", category.getAllCategory);
+router.get("/get/categorys", category.getAllCategory);
 
 module.exports = router;

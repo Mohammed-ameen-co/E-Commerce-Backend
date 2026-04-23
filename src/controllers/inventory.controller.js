@@ -4,9 +4,18 @@ const mongoose = require("mongoose");
 
 //This function create new products in inventory schema
 async function createInventoryProducts(req, res) {
-  const { categoryId, productName, description, productCoverImage } = req.body;
+  const {
+    categoryId,
+    productName,
+    description,
+    productCoverImage,
+    isNewArrival,
+    isFeatured,
+    isBestSelling,
+    isTrending,
+  } = req.body;
   try {
-    if (!categoryId || !productName || !description || !productCoverImage) {
+    if (!categoryId || !productName || !description) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -33,6 +42,10 @@ async function createInventoryProducts(req, res) {
       productName,
       description,
       productCoverImage,
+      isNewArrival: isNewArrival ?? false,
+      isFeatured: isFeatured ?? false,
+      isBestSelling: isBestSelling ?? false,
+      isTrending: isTrending ?? false,
     });
 
     return res.status(201).json({
@@ -52,7 +65,15 @@ async function update_product(req, res) {
   try {
     const { productId } = req.params;
 
-    const { productName, description, status } = req.body;
+    const {
+      productName,
+      description,
+      status,
+      isNewArrival,
+      isFeatured,
+      isBestSelling,
+      isTrending,
+    } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(productId)) {
       return res.status(400).json({
@@ -67,8 +88,21 @@ async function update_product(req, res) {
     if (description) {
       updateField.description = description.trim();
     }
+    if (typeof isNewArrival === "boolean") {
+      updateField.isNewArrival = isNewArrival;
+    }
+    if (typeof isFeatured === "boolean") {
+      updateField.isFeatured = isFeatured;
+    }
+    if (typeof isBestSelling === "boolean") {
+      updateField.isBestSelling = isBestSelling;
+    }
+    if (typeof isTrending === "boolean") {
+      updateField.isTrending = isTrending;
+    }
+
     if (status) {
-      const allowed = ["ACTIVE", INACTIVE];
+      const allowed = ["ACTIVE", "INACTIVE"];
       const formatted = status.trim().toUpperCase();
       if (!allowed.includes(formatted)) {
         return res.status(400).json({
@@ -111,14 +145,23 @@ async function update_product(req, res) {
 //And this is get the all invetory schema products
 async function getAllInventoryProduct(req, res) {
   try {
+    const { isNewArrival, isFeatured, isBestSelling, isTrending } = req.query;
+
+    const filter = {};
+
+    if (isNewArrival) filter.isNewArrival = isNewArrival === "true";
+    if (isFeatured) filter.isFeatured = isFeatured === "true";
+    if (isBestSelling) filter.isBestSelling = isBestSelling === "true";
+    if (isTrending) filter.isTrending = isTrending === "true";
+
     const allProduct = await inventoryModel.find(
-      {},
-      {adminId: 0, createdAt: 0, updatedAt: 0},
+      { ...filter, status: "ACTIVE" },
+      { adminId: 0, createdAt: 0, updatedAt: 0 },
     );
 
     return res.status(200).json({
       success: true,
-      data: [allProduct],
+      products: allProduct,
     });
   } catch (error) {
     return res.status(500).json({

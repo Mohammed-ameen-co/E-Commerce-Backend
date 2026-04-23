@@ -112,14 +112,14 @@ async function getAllCategory(req, res) {
     const tree = [];
 
     categorys.forEach((c) => {
-      map[c._id] = { ...c, children: [] };
+      map[c._id] = { ...c.toObject(), children: [] };
     });
 
     categorys.forEach((c) => {
       if (c.parentCategoryId) {
         map[c.parentCategoryId]?.children.push(map[c._id]);
       } else {
-        tree.push([map[c._id]]);
+        tree.push(map[c._id]);
       }
     });
 

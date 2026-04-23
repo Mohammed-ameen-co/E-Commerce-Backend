@@ -37,7 +37,7 @@ const inventorySchema = new mongoose.Schema(
     productCoverImage: {
       type: String,
       trim: true,
-      required: [true, "Product Cover Image URL is required"],
+      // required: [true, "Product Cover Image URL is required"],
       match: [
         /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i,
         "Please use a valid image URL (jpg, jpeg, png, gif, webp)",
@@ -51,6 +51,26 @@ const inventorySchema = new mongoose.Schema(
       index: true,
       uppercase: true,
     },
+    isNewArrival: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    isFeatured: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    isBestSelling: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    isTrending: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
   { timestamps: true },
 );
@@ -62,6 +82,11 @@ inventorySchema.index(
   },
   { weight: { productName: 10, description: 7 } },
 );
+
+inventorySchema.index({
+  isNewArrival: 1,
+  status: 1,
+});
 
 inventorySchema.index(
   {
