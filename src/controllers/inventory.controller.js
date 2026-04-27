@@ -1,52 +1,9 @@
-const inventoryModel = require("../models/inventory.model");
-const categoryModel = require("../models/category.model");
-const mongoose = require("mongoose");
+const service = require("../services/inventory.service");
 
 //This function create new products in inventory schema
 async function createInventoryProducts(req, res) {
-  const {
-    categoryId,
-    productName,
-    description,
-    productCoverImage,
-    isNewArrival,
-    isFeatured,
-    isBestSelling,
-    isTrending,
-  } = req.body;
   try {
-    if (!categoryId || !productName || !description) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(categoryId)) {
-      return res.status(400).json({
-        message: "Invalid category ID",
-      });
-    }
-
-    const category = await categoryModel.findOne({
-      _id: categoryId,
-      adminId: req.user._id,
-    });
-
-    if (!category) {
-      return res.status(404).json({
-        message: "Please first create a category before adding products",
-      });
-    }
-
-    const product = await inventoryModel.create({
-      adminId: req.user._id,
-      categoryId: category._id,
-      productName,
-      description,
-      productCoverImage,
-      isNewArrival: isNewArrival ?? false,
-      isFeatured: isFeatured ?? false,
-      isBestSelling: isBestSelling ?? false,
-      isTrending: isTrending ?? false,
-    });
+    const product = await service.createInventory(req.body, req.user);
 
     return res.status(201).json({
       success: true,
@@ -64,75 +21,11 @@ async function createInventoryProducts(req, res) {
 async function update_product(req, res) {
   try {
     const { productId } = req.params;
-
-    const {
-      productName,
-      description,
-      status,
-      isNewArrival,
-      isFeatured,
-      isBestSelling,
-      isTrending,
-    } = req.body;
-
-    if (!mongoose.Types.ObjectId.isValid(productId)) {
-      return res.status(400).json({
-        message: "Invalid product ID",
-      });
-    }
-
-    const updateField = {};
-    if (productName) {
-      updateField.productName = productName.trim();
-    }
-    if (description) {
-      updateField.description = description.trim();
-    }
-    if (typeof isNewArrival === "boolean") {
-      updateField.isNewArrival = isNewArrival;
-    }
-    if (typeof isFeatured === "boolean") {
-      updateField.isFeatured = isFeatured;
-    }
-    if (typeof isBestSelling === "boolean") {
-      updateField.isBestSelling = isBestSelling;
-    }
-    if (typeof isTrending === "boolean") {
-      updateField.isTrending = isTrending;
-    }
-
-    if (status) {
-      const allowed = ["ACTIVE", "INACTIVE"];
-      const formatted = status.trim().toUpperCase();
-      if (!allowed.includes(formatted)) {
-        return res.status(400).json({
-          message: "Invalid status value",
-        });
-      }
-      updateField.status = formatted;
-    }
-
-    if (Object.keys(updateField).length === 0) {
-      return res.status(400).json({
-        message: "At least on field required",
-      });
-    }
-
-    const updateProduct = await inventoryModel.findByIdAndUpdate(
-      productId,
-      { $set: updateField },
-      { new: true, runValidators: true },
-    );
-
-    if (!updateProduct) {
-      return res.status(404).json({
-        message: "Product data not found",
-      });
-    }
+    const product = await service.updateProduct(productId, req.body);
 
     return res.status(200).json({
       message: "Product updated success",
-      product: updateProduct,
+      product,
     });
   } catch (error) {
     return res.status(500).json({
@@ -145,27 +38,16 @@ async function update_product(req, res) {
 //And this is get the all invetory schema products
 async function getAllInventoryProduct(req, res) {
   try {
-    const { isNewArrival, isFeatured, isBestSelling, isTrending } = req.query;
-
-    const filter = {};
-
-    if (isNewArrival) filter.isNewArrival = isNewArrival === "true";
-    if (isFeatured) filter.isFeatured = isFeatured === "true";
-    if (isBestSelling) filter.isBestSelling = isBestSelling === "true";
-    if (isTrending) filter.isTrending = isTrending === "true";
-
-    const allProduct = await inventoryModel.find(
-      { ...filter, status: "ACTIVE" },
-      { adminId: 0, createdAt: 0, updatedAt: 0 },
-    );
+    const product = await service.getProducts(req.query);
 
     return res.status(200).json({
       success: true,
-      products: allProduct,
+      product,
     });
   } catch (error) {
     return res.status(500).json({
       message: "Internal server error from get all inventory product",
+      error: error.message,
     });
   }
 }
