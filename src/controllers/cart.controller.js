@@ -1,8 +1,8 @@
-const service = require("../services/cart.service");
+const cartService = require("../services/cart.service");
 
 async function createCart(req, res) {
   try {
-    const cart = await service.createCart(req.body, req.user);
+    const cart = await cartService.createCart(req.body, req.user);
 
     return res.status(201).json({
       message: "Cart successfully created",
@@ -20,7 +20,7 @@ async function removeItem(req, res) {
   try {
     const { variantId } = req.params;
 
-    const cart = await service.removeItem(variantId, req.user);
+    const cart = await cartService.removeItem(variantId, req.user);
 
     return res.status(200).json({
       message: "Item remove successfully",
@@ -37,7 +37,7 @@ async function removeItem(req, res) {
 async function removeOneItem(req, res) {
   try {
     const { variantId } = req.params;
-    const cart = await service.removeOneItem(variantId, req.user);
+    const cart = await cartService.removeOneItem(variantId, req.user);
     return res.status(200).json({
       message: "Item remove successfully",
       cart,
@@ -52,7 +52,7 @@ async function removeOneItem(req, res) {
 
 async function getAllCart(req, res) {
   try {
-    const cart = await service.getAllCart(req.user);
+    const cart = await cartService.getAllCart(req.user);
 
     return res.status(200).json({
       message: "Cart data successfully get",

@@ -1,9 +1,9 @@
-const service = require("../services/category.service");
+const categoryService = require("../services/category.service");
 
 //Create new category
 async function createCategory(req, res) {
     try {
-      const category = await service.createCategory(req.body, req.user);
+      const category = await categoryService.createCategory(req.body, req.user);
     return res.status(201).json({
       success: true,
       message: "Category successfully created",
@@ -21,7 +21,7 @@ async function createCategory(req, res) {
 async function updateCategory(req, res) {
   try {
     const { categoryId } = req.params;
-    const category = await service.updateCategory(categoryId, req.body, req.user);
+    const category = await categoryService.updateCategory(categoryId, req.body, req.user);
     return res.status(200).json({
       message: "Category name updated",
       category: category,
@@ -42,7 +42,7 @@ async function updateCategory(req, res) {
 //This controller get All category
 async function getAllCategory(req, res) {
   try {
-    const tree = await service.getAllCategory();
+    const tree = await categoryService.getAllCategory();
     return res.status(200).json({
       success: true,
       categorys: tree,

@@ -1,9 +1,9 @@
-const service = require("../services/inventory.service");
+const inventroyService = require("../services/inventory.service");
 
 //This function create new products in inventory schema
 async function createInventoryProducts(req, res) {
   try {
-    const product = await service.createInventory(req.body, req.user);
+    const product = await inventoryService.createInventory(req.body, req.user);
 
     return res.status(201).json({
       success: true,
@@ -21,7 +21,7 @@ async function createInventoryProducts(req, res) {
 async function update_product(req, res) {
   try {
     const { productId } = req.params;
-    const product = await service.updateProduct(productId, req.body);
+    const product = await inventoryService.updateProduct(productId, req.body);
 
     return res.status(200).json({
       message: "Product updated success",
@@ -38,7 +38,7 @@ async function update_product(req, res) {
 //And this is get the all invetory schema products
 async function getAllInventoryProduct(req, res) {
   try {
-    const product = await service.getProducts(req.query);
+    const product = await inventoryService.getProducts(req.query);
 
     return res.status(200).json({
       success: true,

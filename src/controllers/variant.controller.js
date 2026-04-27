@@ -1,9 +1,9 @@
-const service = require("../services/variant.service");
+const variantService = require("../services/variant.service");
 
 //This is create new variant
 async function createVariantForProducts(req, res) {
   try {
-    const variant = await service.createVariantForProducts(req.body, req.user);
+    const variant = await variantService.createVariantForProducts(req.body, req.user);
 
     return res.status(201).json({
       success: true,
@@ -22,7 +22,7 @@ async function createVariantForProducts(req, res) {
 async function updateA_Variant(req, res) {
   try {
     const { variantId } = req.params;
-    const variant = await service.updateA_Variant(
+    const variant = await variantService.updateA_Variant(
       variantId,
       req.body,
       req.user,
