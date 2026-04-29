@@ -1,4 +1,4 @@
-const inventroyService = require("../services/inventory.service");
+const inventoryService = require("../services/inventory.service");
 
 //This function create new products in inventory schema
 async function createInventoryProducts(req, res) {
@@ -8,7 +8,7 @@ async function createInventoryProducts(req, res) {
     return res.status(201).json({
       success: true,
       message: "Product successfully created",
-      product,
+      products: product,
     });
   } catch (error) {
     return res
@@ -25,7 +25,7 @@ async function update_product(req, res) {
 
     return res.status(200).json({
       message: "Product updated success",
-      product,
+      products: product,
     });
   } catch (error) {
     return res.status(500).json({
@@ -42,7 +42,7 @@ async function getAllInventoryProduct(req, res) {
 
     return res.status(200).json({
       success: true,
-      product,
+      products: product,
     });
   } catch (error) {
     return res.status(500).json({

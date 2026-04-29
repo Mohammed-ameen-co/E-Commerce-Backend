@@ -7,7 +7,7 @@ async function createCategory(req, res) {
     return res.status(201).json({
       success: true,
       message: "Category successfully created",
-      category,
+      categorys: category,
     });
   } catch (error) {
     console.error("Error creating category:", error);
@@ -24,7 +24,7 @@ async function updateCategory(req, res) {
     const category = await categoryService.updateCategory(categoryId, req.body, req.user);
     return res.status(200).json({
       message: "Category name updated",
-      category: category,
+      categorys: category,
     });
   } catch (error) {
     if (error.code === 11000) {

@@ -29,6 +29,10 @@ const userSchema = new mongoose.Schema(
       default: false,
       required: [true, "Email verification status is required"],
     },
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
     role: {
       type: String,
       enum: ["user", "admin"],
